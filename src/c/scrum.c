@@ -2,7 +2,7 @@
 
 static Window *window;
 static Layer *s_simple_bg_layer, *s_simple_timer_layer;
-static TextLayer *text_layer;
+static TextLayer *text_layer, *total_layer;
 
 static int32_t s_pos = -1;
 static char *s_names[20];
@@ -12,7 +12,9 @@ static int32_t s_warnTime = 60;
 static int s_times[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 static GColor s_boundColours[20];
 static time_t s_timerStart;
+static time_t s_totalStart;
 static char *s_timeText;
+static char *s_totalText;
 
 ///CALC SECTION
 
@@ -34,14 +36,12 @@ static void saveData() {
   persist_write_int(0, s_pos);
   int offset = 1;
   for (int i = 0; i < 20; i++) {
-    //persist_delete(i + 1); // Clear out old data (note: does not use offset)
     persist_write_string(i + 1, "\0"); // Clear out old data (note: does not use offset)
     if (!s_names[i] || s_names[i][0] == '\0') {
       //Debubble
       offset--;
       continue;
     }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Saving: i = %d, s_names = %s", i, s_names[i]);
     persist_write_string(i + offset, s_names[i]);
   }
   persist_write_int(22, s_warnTime);
@@ -115,8 +115,14 @@ static int getTime() {
   return curTime + duration;
 }
 
+static int getTotalTime() {
+  if (!s_totalStart) return 0;
+  return time(NULL) - s_totalStart;
+}
+
 static void restartTimer() {
   s_timerStart = time(NULL);
+  if (!s_totalStart) s_totalStart = s_timerStart;
 }
 
 static void stopTimer() {
@@ -193,6 +199,17 @@ static void timer_update_proc(Layer *layer, GContext *ctx) {
     s_timeText[3] = (s / 10) + '0';
     s_timeText[4] = (s % 10) + '0';
     text_layer_set_text(text_layer, s_timeText);
+
+    int totalTime = getTotalTime();
+    if (totalTime > 3599) totalTime = totalTime / 60;
+    if (totalTime > 5999) totalTime = 5999;
+    int tm = totalTime / 60;
+    int ts = totalTime % 60;
+    if (tm >= 10) s_totalText[0] = (tm / 10) + '0';
+    s_totalText[1] = (tm % 10) + '0';
+    s_totalText[3] = (ts / 10) + '0';
+    s_totalText[4] = (ts % 10) + '0';
+    //text_layer_set_text(total_layer, s_totalText);
   }
 }
 
@@ -282,6 +299,13 @@ static void window_load(Window *window) {
   text_layer_set_text_alignment(text_layer, GTextAlignmentCenter);
   layer_add_child(window_layer, text_layer_get_layer(text_layer));
 
+  total_layer = text_layer_create(GRect(50, 112, bounds.size.w - 100, 20));
+  text_layer_set_font(total_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_text_alignment(total_layer, GTextAlignmentCenter);
+  layer_add_child(window_layer, text_layer_get_layer(total_layer));
+  s_totalText = "  :  \0";
+  text_layer_set_text(total_layer, s_totalText);
+
   loadData();
   showPerson();
 }
@@ -290,6 +314,7 @@ static void window_unload(Window *window) {
   layer_destroy(s_simple_bg_layer);
   layer_destroy(s_simple_timer_layer);
   text_layer_destroy(text_layer);
+  text_layer_destroy(total_layer);
 }
 
 static void init(void) {
