@@ -26,6 +26,7 @@ static void loadData() {
     }
   }
   s_warnTime = persist_read_int(22);
+  if (s_warnTime < 60 || s_warnTime > 16*60) s_warnTime = 60;
 }
 
 static void saveData() {
@@ -161,7 +162,7 @@ static void timer_update_proc(Layer *layer, GContext *ctx) {
   int32_t end_angle;
   if (time >= s_warnTime) {
     end_angle = TRIG_MAX_ANGLE;
-    graphics_context_set_fill_color(ctx, GColorLightGray);
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorSunsetOrange, GColorLightGray));
     graphics_fill_radial(ctx, inner_frame, GOvalScaleModeFitCircle, 5, 0, end_angle);
   }
   end_angle = TRIG_MAX_ANGLE * ((time % s_warnTime * 1.) / (s_warnTime * 1.));
@@ -301,7 +302,14 @@ static void init(void) {
   const bool animated = true;
   window_stack_push(window, animated);
   for (int i = 0; i < 20; i++) {
-    s_boundColours[i] = (i % 2 == 0) ? GColorWhite : GColorLightGray;
+    if (PBL_IF_COLOR_ELSE(true, false)) {
+      if (i % 4 == 0) s_boundColours[i] = GColorVeryLightBlue;
+      if (i % 4 == 1) s_boundColours[i] = GColorInchworm;
+      if (i % 4 == 2) s_boundColours[i] = GColorSunsetOrange;
+      if (i % 4 == 3) s_boundColours[i] = GColorLavenderIndigo;
+    } else {
+      s_boundColours[i] = (i % 2 == 0) ? GColorWhite : GColorLightGray;
+    }
   }
   tick_timer_service_subscribe(SECOND_UNIT, handle_second_tick);
 
