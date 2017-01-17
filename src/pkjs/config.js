@@ -4,10 +4,6 @@ module.exports = [
     "defaultValue": "Scrum Configuration"
   },
   {
-    "type": "text",
-    "defaultValue": "Choices, choices, choices..."
-  },
-  {
     "type": "section",
     "items": [
       {
@@ -213,6 +209,10 @@ module.exports = [
         "attributes": {
           "maxlength": "20"
         }
+      },
+      {
+        "type": "text",
+        "defaultValue": "If you have more than 20 people, might I suggest splitting into smaller scrums..."
       }
     ]
   },
