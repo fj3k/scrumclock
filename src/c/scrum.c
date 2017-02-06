@@ -194,7 +194,11 @@ static void timer_update_proc(Layer *layer, GContext *ctx) {
     text_layer_set_font(text_layer, fonts_get_system_font(FONT_KEY_GOTHIC_28));
     int m = time / 60;
     int s = time % 60;
-    if (m >= 10) s_timeText[0] = (m / 10) + '0';
+    if (m >= 10) {
+      s_timeText[0] = (m / 10) + '0';
+    } else {
+      s_timeText[0] = ' ';
+    }
     s_timeText[1] = (m % 10) + '0';
     s_timeText[3] = (s / 10) + '0';
     s_timeText[4] = (s % 10) + '0';
